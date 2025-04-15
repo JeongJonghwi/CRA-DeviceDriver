@@ -9,20 +9,20 @@ public:
 	MOCK_METHOD(void, write, (long address, unsigned char data), (override));
 };
 
-TEST(DeviceDriver, ReadFromHW) {
+class DeviceDriverFixture : public Test {
+public:
 	MockFlashMemoryDevice MockHardware;
 	DeviceDriver driver{ &MockHardware };
+};
 
+TEST_F(DeviceDriverFixture, ReadMustOccurFiveTimes) {
 	EXPECT_CALL(MockHardware, read)
 		.Times(5);
 
 	int data = driver.read(0xFF);
 }
 
-TEST(DeviceDriver, ReadFromHWSuccess) {
-	MockFlashMemoryDevice MockHardware;
-	DeviceDriver driver{ &MockHardware };
-
+TEST_F(DeviceDriverFixture, ReadSuccess) {
 	EXPECT_CALL(MockHardware, read(_))
 		.WillRepeatedly(Return(1));
 
@@ -30,10 +30,7 @@ TEST(DeviceDriver, ReadFromHWSuccess) {
 	EXPECT_EQ(1, data);
 }
 
-TEST(DeviceDriver, ReadFromHWFail) {
-	MockFlashMemoryDevice MockHardware;
-	DeviceDriver driver{ &MockHardware };
-
+TEST_F(DeviceDriverFixture, ReadFailWithException) {
 	EXPECT_CALL(MockHardware, read(_))
 		.WillOnce(Return(2))
 		.WillRepeatedly(Return(1));
@@ -47,10 +44,7 @@ TEST(DeviceDriver, ReadFromHWFail) {
 	}
 }
 
-TEST(DeviceDriver, WriteFromHW) {
-	MockFlashMemoryDevice MockHardware;
-	DeviceDriver driver{ &MockHardware };
-
+TEST_F(DeviceDriverFixture, WriteMustOccurOneRead) {
 	EXPECT_CALL(MockHardware, read(_))
 		.Times(1)
 		.WillRepeatedly(Return(0xFF));
@@ -60,10 +54,7 @@ TEST(DeviceDriver, WriteFromHW) {
 	driver.write(0xFF, 0xAB);
 }
 
-TEST(DeviceDriver, WriteFromHWSuccess) {
-	MockFlashMemoryDevice MockHardware;
-	DeviceDriver driver{ &MockHardware };
-
+TEST_F(DeviceDriverFixture, WriteSuccess) {
 	EXPECT_CALL(MockHardware, read(_))
 		.WillRepeatedly(Return(0xFF));
 
@@ -72,10 +63,7 @@ TEST(DeviceDriver, WriteFromHWSuccess) {
 	driver.write(0xFF, 0xAB);
 }
 
-TEST(DeviceDriver, WriteFromHWFail) {
-	MockFlashMemoryDevice MockHardware;
-	DeviceDriver driver{ &MockHardware };
-
+TEST_F(DeviceDriverFixture, WriteFailWithException) {
 	EXPECT_CALL(MockHardware, read(_))
 		.WillRepeatedly(Return(0xAB));
 
