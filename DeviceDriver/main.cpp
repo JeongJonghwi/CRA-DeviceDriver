@@ -18,6 +18,12 @@ public:
 		return result;
 	}
 
+	void writeAll(int value) {
+		for (int addr = 0; addr < 5; addr++) {
+			driver.write(addr, value);
+		}
+	}
+
 private:
 	DeviceDriver driver;
 };
@@ -111,6 +117,33 @@ TEST_F(ApplicationFixture, readAndPrint) {
 		.WillRepeatedly(Return(1));
 
 	EXPECT_EQ(string{ "11111" }, app.readAndPrint(startAddr, endAddr));
+}
+
+TEST_F(ApplicationFixture, writeAll) {
+	int value = 0xAB;
+
+	EXPECT_CALL(mockFlashMemoryDevice, read(_))
+		.WillRepeatedly(Return(0xFF));
+
+	EXPECT_CALL(mockFlashMemoryDevice, write(_, _))
+		.Times(5);
+	
+	app.writeAll(value);
+}
+
+TEST_F(ApplicationFixture, writeAllFailWithException) {
+	int value = 0xAB;
+
+	EXPECT_CALL(mockFlashMemoryDevice, read(_))
+		.WillOnce(Return(0xAB))
+		.WillRepeatedly(Return(0xFF));
+
+	try {
+		app.writeAll(value);
+	}
+	catch (std::exception& e) {
+		EXPECT_EQ(string{ e.what() }, string{ "write fail exception" });
+	}
 }
 
 int main() {
