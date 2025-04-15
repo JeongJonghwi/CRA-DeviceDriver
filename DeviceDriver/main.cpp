@@ -34,6 +34,13 @@ public:
 	DeviceDriver driver{ &MockHardware };
 };
 
+class ApplicationFixture : public Test {
+public:
+	MockFlashMemoryDevice mockFlashMemoryDevice;
+	DeviceDriver driver{ &mockFlashMemoryDevice };
+	Application app{ driver };
+};
+
 TEST_F(DeviceDriverFixture, ReadMustOccurFiveTimes) {
 	EXPECT_CALL(MockHardware, read)
 		.Times(5);
@@ -95,10 +102,7 @@ TEST_F(DeviceDriverFixture, WriteFailWithException) {
 	}
 }
 
-TEST(ApplicationTest, readAndPrint) {
-	MockFlashMemoryDevice mockFlashMemoryDevice;
-	DeviceDriver driver{ &mockFlashMemoryDevice };
-	Application app{ driver };
+TEST_F(ApplicationFixture, readAndPrint) {
 	int startAddr = 0x0;
 	int endAddr = 0x5;
 
