@@ -47,6 +47,47 @@ TEST(DeviceDriver, ReadFromHWFail) {
 	}
 }
 
+TEST(DeviceDriver, WriteFromHW) {
+	MockFlashMemoryDevice MockHardware;
+	DeviceDriver driver{ &MockHardware };
+
+	EXPECT_CALL(MockHardware, read(_))
+		.Times(1)
+		.WillRepeatedly(Return(0xFF));
+
+	EXPECT_CALL(MockHardware, write(_, _));
+
+	driver.write(0xFF, 0xAB);
+}
+
+TEST(DeviceDriver, WriteFromHWSuccess) {
+	MockFlashMemoryDevice MockHardware;
+	DeviceDriver driver{ &MockHardware };
+
+	EXPECT_CALL(MockHardware, read(_))
+		.WillRepeatedly(Return(0xFF));
+
+	EXPECT_CALL(MockHardware, write(_, _));
+
+	driver.write(0xFF, 0xAB);
+}
+
+TEST(DeviceDriver, WriteFromHWFail) {
+	MockFlashMemoryDevice MockHardware;
+	DeviceDriver driver{ &MockHardware };
+
+	EXPECT_CALL(MockHardware, read(_))
+		.WillRepeatedly(Return(0xAB));
+
+	try {
+		driver.write(0xFF, 0xAB);
+		FAIL();
+	}
+	catch (std::exception& e) {
+		EXPECT_EQ(string{ e.what() }, string{ "write fail exception" });
+	}
+}
+
 int main() {
 	::testing::InitGoogleMock();
 	return RUN_ALL_TESTS();

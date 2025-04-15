@@ -21,3 +21,10 @@ public:
         exception{ _Message } {
     }
 };
+
+class WriteFailException : public std::exception {
+public:
+    explicit WriteFailException(char const* _Message) :
+        exception{ _Message } {
+    }
+};
