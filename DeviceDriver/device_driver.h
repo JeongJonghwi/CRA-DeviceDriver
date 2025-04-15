@@ -1,5 +1,8 @@
 #pragma once
 #include "flash_memory_device.h"
+#include <string>
+
+using std::string;
 
 class DeviceDriver
 {
