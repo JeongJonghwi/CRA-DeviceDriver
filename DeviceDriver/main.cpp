@@ -42,8 +42,8 @@ public:
 
 class ApplicationFixture : public Test {
 public:
-	MockFlashMemoryDevice mockFlashMemoryDevice;
-	DeviceDriver driver{ &mockFlashMemoryDevice };
+	MockFlashMemoryDevice MockHardware;
+	DeviceDriver driver{ &MockHardware };
 	Application app{ driver };
 };
 
@@ -112,7 +112,7 @@ TEST_F(ApplicationFixture, readAndPrint) {
 	int startAddr = 0x0;
 	int endAddr = 0x5;
 
-	EXPECT_CALL(mockFlashMemoryDevice, read(_))
+	EXPECT_CALL(MockHardware, read(_))
 		.Times(25)
 		.WillRepeatedly(Return(1));
 
@@ -122,10 +122,10 @@ TEST_F(ApplicationFixture, readAndPrint) {
 TEST_F(ApplicationFixture, writeAll) {
 	int value = 0xAB;
 
-	EXPECT_CALL(mockFlashMemoryDevice, read(_))
+	EXPECT_CALL(MockHardware, read(_))
 		.WillRepeatedly(Return(0xFF));
 
-	EXPECT_CALL(mockFlashMemoryDevice, write(_, _))
+	EXPECT_CALL(MockHardware, write(_, _))
 		.Times(5);
 	
 	app.writeAll(value);
@@ -134,7 +134,7 @@ TEST_F(ApplicationFixture, writeAll) {
 TEST_F(ApplicationFixture, writeAllFailWithException) {
 	int value = 0xAB;
 
-	EXPECT_CALL(mockFlashMemoryDevice, read(_))
+	EXPECT_CALL(MockHardware, read(_))
 		.WillOnce(Return(0xAB))
 		.WillRepeatedly(Return(0xFF));
 
