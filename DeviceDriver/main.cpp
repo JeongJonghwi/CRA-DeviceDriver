@@ -3,6 +3,31 @@
 
 using namespace testing;
 
+class Application {
+public:
+	Application(DeviceDriver driver) :
+		driver{ driver } {
+	}
+
+	string readAndPrint(int startAddr, int endAddr) {
+		string result = "";
+		while (startAddr < endAddr) {
+			int data = driver.read(startAddr++);
+			result += std::to_string(data);
+		}
+		return result;
+	}
+
+	void writeAll(int value) {
+		for (int addr = 0; addr < 5; addr++) {
+			driver.write(addr, value);
+		}
+	}
+
+private:
+	DeviceDriver driver;
+};
+
 class MockFlashMemoryDevice : public FlashMemoryDevice {
 public:
 	MOCK_METHOD(unsigned char, read, (long address), (override));
@@ -13,6 +38,13 @@ class DeviceDriverFixture : public Test {
 public:
 	MockFlashMemoryDevice MockHardware;
 	DeviceDriver driver{ &MockHardware };
+};
+
+class ApplicationFixture : public Test {
+public:
+	MockFlashMemoryDevice MockHardware;
+	DeviceDriver driver{ &MockHardware };
+	Application app{ driver };
 };
 
 TEST_F(DeviceDriverFixture, ReadMustOccurFiveTimes) {
@@ -70,6 +102,44 @@ TEST_F(DeviceDriverFixture, WriteFailWithException) {
 	try {
 		driver.write(0xFF, 0xAB);
 		FAIL();
+	}
+	catch (std::exception& e) {
+		EXPECT_EQ(string{ e.what() }, string{ "write fail exception" });
+	}
+}
+
+TEST_F(ApplicationFixture, readAndPrint) {
+	int startAddr = 0x0;
+	int endAddr = 0x5;
+
+	EXPECT_CALL(MockHardware, read(_))
+		.Times(25)
+		.WillRepeatedly(Return(1));
+
+	EXPECT_EQ(string{ "11111" }, app.readAndPrint(startAddr, endAddr));
+}
+
+TEST_F(ApplicationFixture, writeAll) {
+	int value = 0xAB;
+
+	EXPECT_CALL(MockHardware, read(_))
+		.WillRepeatedly(Return(0xFF));
+
+	EXPECT_CALL(MockHardware, write(_, _))
+		.Times(5);
+	
+	app.writeAll(value);
+}
+
+TEST_F(ApplicationFixture, writeAllFailWithException) {
+	int value = 0xAB;
+
+	EXPECT_CALL(MockHardware, read(_))
+		.WillOnce(Return(0xAB))
+		.WillRepeatedly(Return(0xFF));
+
+	try {
+		app.writeAll(value);
 	}
 	catch (std::exception& e) {
 		EXPECT_EQ(string{ e.what() }, string{ "write fail exception" });
