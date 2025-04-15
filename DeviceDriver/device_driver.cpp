@@ -1,14 +1,5 @@
 #include "device_driver.h"
 
-class ReadFailException : public std::exception {
-public:
-    explicit ReadFailException(string _Message) :
-        _Message{ _Message } {
-    }
-private:
-    string _Message;
-};
-
 DeviceDriver::DeviceDriver(FlashMemoryDevice* hardware) : m_hardware(hardware)
 {
 }
