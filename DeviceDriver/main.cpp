@@ -3,6 +3,25 @@
 
 using namespace testing;
 
+class Application {
+public:
+	Application(DeviceDriver driver) :
+		driver{ driver } {
+	}
+
+	string readAndPrint(int startAddr, int endAddr) {
+		string result = "";
+		while (startAddr < endAddr) {
+			int data = driver.read(startAddr++);
+			result += std::to_string(data);
+		}
+		return result;
+	}
+
+private:
+	DeviceDriver driver;
+};
+
 class MockFlashMemoryDevice : public FlashMemoryDevice {
 public:
 	MOCK_METHOD(unsigned char, read, (long address), (override));
@@ -74,6 +93,20 @@ TEST_F(DeviceDriverFixture, WriteFailWithException) {
 	catch (std::exception& e) {
 		EXPECT_EQ(string{ e.what() }, string{ "write fail exception" });
 	}
+}
+
+TEST(ApplicationTest, readAndPrint) {
+	MockFlashMemoryDevice mockFlashMemoryDevice;
+	DeviceDriver driver{ &mockFlashMemoryDevice };
+	Application app{ driver };
+	int startAddr = 0x0;
+	int endAddr = 0x5;
+
+	EXPECT_CALL(mockFlashMemoryDevice, read(_))
+		.Times(25)
+		.WillRepeatedly(Return(1));
+
+	EXPECT_EQ(string{ "11111" }, app.readAndPrint(startAddr, endAddr));
 }
 
 int main() {
